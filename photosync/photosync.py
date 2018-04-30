@@ -4,6 +4,7 @@ import re
 import shutil
 import logging
 import argparse
+from pathlib import Path
 
 DEFAULT_DATABASE_NAME = '.photosync_db'
 PATTERN = re.compile('^(IMG|VID)_(\d{4})(\d{2})(\d{2})_')
@@ -84,12 +85,15 @@ def save_db(path_to_db, db: Database):
         json.dump(db.dict_, database_json)
 
 
-def synchronize(src, dest, db: Database):
-    for root, dirs, files in os.walk(src):
+def synchronize(src: Path, dest: Path, db: Database):
+    for root, dirs, files in os.walk(str(src)):
+        dest_root = dest / Path(root).relative_to(src)
         for filename in files:
             dbentry = create_dbentry(filename)
             if dbentry and db.add_member(dbentry):
-                shutil.copy2(os.path.join(root, filename), dest)
+                if not dest_root.exists():
+                    dest_root.mkdir()
+                shutil.copy2(os.path.join(root, filename), str(dest_root))
                 LOGGER.info('file %s copied', filename)
 
 
@@ -117,8 +121,11 @@ def main():
     if not os.path.exists(db_path):
         init_db_file(db_path)
 
+    src_path = Path(args.src).resolve()
+    dest_path = Path(args.dest).resolve()
+
     db = load_db(db_path)
-    synchronize(args.src, args.dest, db)
+    synchronize(src_path, dest_path, db)
     save_db(args.db, db)
 
 
