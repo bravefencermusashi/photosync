@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 
 DEFAULT_DATABASE_NAME = '.photosync_db'
-PATTERN = re.compile('^(IMG|VID)_(\d{4})(\d{2})(\d{2})_')
+PATTERN = re.compile('(IMG|VID)_(\d{4})(\d{2})(\d{2})_')
 
 
 def create_logger(name):
@@ -26,7 +26,7 @@ LOGGER = create_logger(__name__)
 def init_db_file(path):
     with open(path, 'w') as db_file:
         db_file.write('{}')
-    LOGGER.info('db file create : %s', path)
+    LOGGER.info('db file initialized')
 
 
 class DBEntry:
@@ -38,7 +38,7 @@ class DBEntry:
 
 
 def create_dbentry(filename):
-    matcher = PATTERN.match(filename)
+    matcher = PATTERN.search(filename)
     dbentry = None
     if matcher:
         dbentry = DBEntry()
@@ -87,14 +87,15 @@ def save_db(path_to_db, db: Database):
 
 def synchronize(src: Path, dest: Path, db: Database):
     for root, dirs, files in os.walk(str(src)):
-        dest_root = dest / Path(root).relative_to(src)
+        root_path = Path(root)
+        dest_root = dest / root_path.relative_to(src)
         for filename in files:
-            dbentry = create_dbentry(filename)
+            dbentry = create_dbentry(str((root_path / filename).relative_to(src)))
             if dbentry and db.add_member(dbentry):
                 if not dest_root.exists():
                     dest_root.mkdir()
                 shutil.copy2(os.path.join(root, filename), str(dest_root))
-                LOGGER.info('file %s copied', filename)
+                LOGGER.info('file %s copied', dbentry.full_name)
 
 
 def get_db_path_default():
@@ -103,9 +104,10 @@ def get_db_path_default():
 
 def create_arg_parser():
     parser = argparse.ArgumentParser(prog='photosync')
-    parser.add_argument('src')
-    parser.add_argument('dest')
-    parser.add_argument('-d', '--db', default=get_db_path_default())
+    parser.add_argument('src', help='where are the photos you want to copy')
+    parser.add_argument('dest', help='where you want to copy your photos')
+    parser.add_argument('-d', '--db', default=get_db_path_default(),
+                        help='the location of the file that contains information about already transferred photos')
     parser.add_argument('-v', '--verbose', action='store_true', default=False)
     return parser
 
@@ -118,6 +120,7 @@ def main():
         LOGGER.setLevel(logging.INFO)
 
     db_path = args.db
+    LOGGER.info('db location: %s', db_path)
     if not os.path.exists(db_path):
         init_db_file(db_path)
 
