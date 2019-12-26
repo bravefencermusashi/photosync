@@ -37,7 +37,7 @@ usage
 
     optional arguments:
       -h, --help      show this help message and exit
-      -d DB, --db DB  the location of the file that contain information about
+      -d DB, --db DB  the location of the file that contains information about
                       already transferred photos
       -v, --verbose
 
