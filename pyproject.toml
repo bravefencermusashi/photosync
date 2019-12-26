@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "photosync"
+version = "1.0.0"
+description = "Synchronize your phone photos easily"
+authors = ["Alexandre G <alex.git@ralouf.fr>"]
+license = "GPL-3.0"
+repository = "https://github.com/bravefencermusashi/photosync"
+homepage = "https://github.com/bravefencermusashi/photosync"
+readme = "README.rst"
+classifiers = [
+    "Environment :: Console",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.poetry.scripts]
+photosync = 'photosync.photosync:main'
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
